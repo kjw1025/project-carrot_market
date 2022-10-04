@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+
+  <!-- jquery -->
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+
+
+  <!-- bootstrap -->
+  <!-- CSS only -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+  <!-- JavaScript Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous">
+  </script>
+
+  <!-- 사용자 설정 -->
+  <link rel="stylesheet" href="main.css">
+
+</head>
+
+<body>
+
+  <!-- firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-storage.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZApVqnihoN5g7XqcGEKsAFVU5gRYYChM",
+      authDomain: "carrot-market-project.firebaseapp.com",
+      projectId: "carrot-market-project",
+      storageBucket: "carrot-market-project.appspot.com",
+      messagingSenderId: "76213765577",
+      appId: "1:76213765577:web:6fe1c59379091c45255418"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <nav class="navbar navbar-expand-lg bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">당근마켓</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="upload.html">upload.html</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="login.html">login.html</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled">Disabled</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <div class="container mt-3">
+    <input type="text" class="form-control mt-2" id="title" placeholder="title">
+    <textarea class="form-control mt-2" id="content">content</textarea>
+    <input type="text" class="form-control mt-2" id="price" placeholder="price">
+    <input class="form-control mt-2" type="file" id="image">
+    <button class="btn btn-danger mt-3" id="send">올리기</button>
+  </div>
+
+
+  <!-- script -->
+  <script>
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // 변수할당
+    let title = $('#title');
+    let content = $('#content');
+    let price = $('#price');
+
+    $('#send').click(function () {
+
+      // storage 파일저장하기위한 코드 *firebase 문법
+      var imgFile = document.querySelector('#image').files[0];
+      var storageRef = storage.ref();
+      var saveUrl = storageRef.child('image/' + imgFile.name);
+      var uploadStart = saveUrl.put(imgFile);
+
+      uploadStart.on('state_changed',
+        // 변화시 작동하는 함수
+        null,
+        // 에러시 작동하는 함수
+        (err) => {
+          console.log("실패이유는 :", err);
+          alert('실패했습니다. 콘솔로 원인을 확인해 주세요.');
+        },
+        // 성공시 작동하는 함수
+        () => {
+          uploadStart.snapshot.ref.getDownloadURL().then((url) => {
+            console.log('업로드 된 경로는 :', url);
+
+            let saveData = {
+              제목: title.val(),
+              내용: content.val(),
+              가격: price.val(),
+              날짜: new Date(),
+              이미지: url
+            }
+            db.collection('product').add(saveData).then((res) => {
+                console.log(res);
+                alert("성공적으로 업로드 되었습니다!");
+                window.location.href = "/index.html"
+              })
+              .catch((err) => {
+                console.log(err);
+                alert("업로드에 실패하였습니다 :", err);
+              });
+          })
+        }
+      )
+
+
+
+    });
+  </script>
+
+</body>
+
+</html>
